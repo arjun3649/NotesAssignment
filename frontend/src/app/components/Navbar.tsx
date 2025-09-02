@@ -49,21 +49,22 @@ export default function Navbar() {
     },
   });
 
-  const handleSignInSubmit = async (email:{email:string}, password:{password:string}) => {
-    await loginMutation.mutateAsync({ user_email: email, password: password });
-  };
+ const handleSignInSubmit = async (email: string, password: string) => {
+   await loginMutation.mutateAsync({ user_email: email, password });
+ };
 
-  const handleSignUpSubmit = async (
-    username:{usernamme:string},
-    email:{email:string},
-    password:{password:string}
-  ) => {
-    await signupMutation.mutateAsync({
-      user_name: username,
-      user_email: email,
-      password: password,
-    });
-  };
+ const handleSignUpSubmit = async (
+   username: string,
+   email: string,
+   password: string
+ ) => {
+   await signupMutation.mutateAsync({
+     user_name: username,
+     user_email: email,
+     password,
+   });
+ };
+
 
   const handleLogout = () => {
     logout();

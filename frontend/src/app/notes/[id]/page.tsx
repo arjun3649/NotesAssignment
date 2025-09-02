@@ -1,43 +1,56 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
-  Edit3,
-  Save,
-  X,
-  Trash2,
+  BookOpen,
   Calendar,
   Clock,
-  BookOpen,
+  Edit3,
   Loader2,
+  Save,
+  Trash2,
+  X,
 } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getNoteById, updateNote, deleteNote } from "../../../../api/notes";
-import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { deleteNote, getNoteById, updateNote } from "../../../../api/notes";
 
-export default function NotePage({
-  params: { id: noteId },
-}: {
+interface Note {
+  note_id: string;
+  user_id: string;
+  note_title: string;
+  note_content?: string | null;
+  last_update: string;
+  created_on: string;
+}
+
+interface NotePageProps {
   params: { id: string };
-}) {
+}
+
+export default function NotePage(props: NotePageProps) {
+  const params =
+    props.params instanceof Promise ? React.use(props.params) : props.params;
+  const noteId = params.id;
   const router = useRouter();
   const queryClient = useQueryClient();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState("");
-  const [editContent, setEditContent] = useState("");
+  const [editTitle, setEditTitle] = useState<string>("");
+  const [editContent, setEditContent] = useState<string>("");
 
   const {
     data: note,
     isLoading,
     isError,
-  } = useQuery({
+  } = useQuery<Note>({
     queryKey: ["note", noteId],
     queryFn: () => getNoteById(noteId),
     enabled: !!noteId,
   });
 
+  // ---- Mutations ----
   const updateMutation = useMutation({
     mutationFn: updateNote,
     onSuccess: () => {
@@ -57,12 +70,13 @@ export default function NotePage({
 
   useEffect(() => {
     if (note) {
-      setEditTitle(note.note_title);
-      setEditContent(note.note_content);
+      setEditTitle(note.note_title ?? "");
+      setEditContent(note.note_content ?? "");
     }
   }, [note]);
 
-  const formatDate = (dateString) => {
+  // ---- Utils ----
+  const formatDate = (dateString: string): string => {
     if (!dateString) return "";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -75,7 +89,7 @@ export default function NotePage({
     });
   };
 
-  const handleSave = () => {
+  const handleSave = (): void => {
     if (!editTitle.trim()) return;
     updateMutation.mutate({
       id: noteId,
@@ -83,16 +97,16 @@ export default function NotePage({
     });
   };
 
-  const handleDelete = () => {
+  const handleDelete = (): void => {
     if (window.confirm("Are you sure you want to delete this note?")) {
       deleteMutation.mutate(noteId);
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = (): void => {
     if (note) {
-      setEditTitle(note.note_title);
-      setEditContent(note.note_content);
+      setEditTitle(note.note_title ?? "");
+      setEditContent(note.note_content ?? "");
     }
     setIsEditing(false);
   };
@@ -142,6 +156,7 @@ export default function NotePage({
         transition={{ duration: 0.5 }}
         className="max-w-4xl mx-auto px-4 py-8"
       >
+        {/* Header */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -224,6 +239,7 @@ export default function NotePage({
           </div>
         </motion.div>
 
+        {/* Content */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
